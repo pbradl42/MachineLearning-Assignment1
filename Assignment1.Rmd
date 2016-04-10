@@ -53,28 +53,33 @@ subTrain2 <- newtrainingset[-subTrain,]
 ```
 Before building the model, we split the training set into two, to allow cross-validation without introducing the testing set to the process of building the model. `r nrow(subTrain1)` with `r ncol(subTrain1)` variables were used for training, `r nrow(subTrain2)` with `r ncol(subTrain2)` variables were used for cross-validation.. 
 
-Models initially tested against all variables included Trees, Random Forest, Linear Disciminant Analysis and Naive Bayes.[^processing]
-[^processing]:Due to the constraints of my system, only the final model discussed herein is actually run in the compilation of this document. All values are from previous runs. The R code is left in, but commented out, so the interested reader could, if he or she wanted to verify, run the code on a faster machine.
+Models initially tested against all variables included Trees, Random Forest, Linear Disciminant Analysis and Naive Bayes.[^1]
+
+[^1]:Due to the constraints of my system, only the final model discussed herein is actually run in the compilation of this document. All values are from previous runs. The R code is left in, but commented out, so the interested reader could, if he or she wanted to verify, run the code on a faster machine.
 ```{r}
-#modFitTrees <- train(classe ~  ., data=subTrain1, method="rpart")
+modFitTrees <- train(classe ~  ., data=subTrain1, method="rpart")
 modFitRF1 <- train(classe ~  ., data=subTrain1, method="rf")
-#modFitLDA <- train(classe ~  ., data=subTrain1, method="lda")
-#modFitNB <- train(classe ~  ., data=subTrain1, method="nb")
+modFitLDA <- train(classe ~  ., data=subTrain1, method="lda")
+modFitNB <- train(classe ~  ., data=subTrain1, method="nb")
 ```
 
 The accuracy of the resultant models except for Random Forest left something to be desired:
 ```{r}
-#modFitTrees$results['Accuracy'][1,]
+modFitTrees$results['Accuracy'][1,]
 modFitRF1$results['Accuracy'][1,]
-#modFitLDA$results['Accuracy'][1,]
-#modFitNB$results['Accuracy'][1,]
+modFitLDA$results['Accuracy'][1,]
+modFitNB$results['Accuracy'][1,]
 ```
-Trees: 50.32%
-RF1: `r modFitRF1$results['Accuracy'][1,]`
-LDA: 70.35%
-NB: 51.34%
+
+| Model Type | Accuracy |
+| ---------- | -------- |
+ Trees | 50.32%        |
+ RF1 | 98.76%       |
+ LDA | 70.35%       |
+ NB | 51.34%       |
+
 ````{r}
-#modFitGBM1 <- train(classe ~  ., data=subTrain1, method="gbm", verbose=FALSE)
+modFitGBM1 <- train(classe ~  ., data=subTrain1, method="gbm", verbose=FALSE)
 ```
 
 To improve the model, we tried Generalized Boosted Models, or 'gbm, which produced an initially exiciting accuracy of 75.00%
@@ -90,12 +95,12 @@ By reviewing the importance of the variables in the output of the Random Forest 
 
 ```{r}
 modFitRF2 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell  + accel_forearm_x + accel_dumbbell_y + gyros_dumbbell_y + magnet_arm_z + magnet_forearm_z + accel_dumbbell_x + yaw_arm + magnet_dumbbell_x + accel_forearm_z + magnet_belt_y, data=subTrain1, method="rf")
-#modFitRF3 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell, data=subTrain1, method="rf")
-#modFitGBM2 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell  + accel_forearm_x + accel_dumbbell_y + gyros_dumbbell_y + magnet_arm_z + magnet_forearm_z + accel_dumbbell_x + yaw_arm + magnet_dumbbell_x + accel_forearm_z + magnet_belt_y, data=subTrain1, method="gbm", verbose=FALSE)
-#modFitGBM3 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell, data=subTrain1, method="gbm", verbose=FALSE)
+modFitRF3 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell, data=subTrain1, method="rf")
+modFitGBM2 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell  + accel_forearm_x + accel_dumbbell_y + gyros_dumbbell_y + magnet_arm_z + magnet_forearm_z + accel_dumbbell_x + yaw_arm + magnet_dumbbell_x + accel_forearm_z + magnet_belt_y, data=subTrain1, method="gbm", verbose=FALSE)
+modFitGBM3 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell, data=subTrain1, method="gbm", verbose=FALSE)
 ```
 
-Neither restriction improved either model, with a decrease in accuracy of the RF model to 98.71 and 98.20 respectively, and 74.15 and 71.68 for the GBM model.
+The restriction improved accuracy (and computational speed) for RF model to 99.42%, but further restriction to the longer set of variables decresaed it to 98.5% accuracy. Both of the GBM models , decrease in accuracy to 74.15 and 71.68 respectively with the restriction.
 
 ### Cross validation
 We also attempted to tune the models by introducing cross validation into the training routine itself using the 'trControl' argument to 'train'.  Leave-one-out and repeated K-fold proved too computational intensive for practical use, so we restricted our experimentation to Bootstrap (method="boot") and Cross-Validation (method="cv").  
@@ -107,30 +112,30 @@ train_control <- trainControl(method="cv", number=10)
 # repeatedcv is too intensive. 
 # train_control <- trainControl(method="LOOCV")
 # Leave one out is too intensive. 
-#modFitRF4 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell  + accel_forearm_x + accel_dumbbell_y + gyros_dumbbell_y + magnet_arm_z + magnet_forearm_z + accel_dumbbell_x + yaw_arm + magnet_dumbbell_x + accel_forearm_z + magnet_belt_y, data=subTrain1, trControl=trainControl(method="cv"), method="rf")
-#modFitGBM4 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell, data=subTrain1, method="gbm", trControl=train_control, verbose=FALSE)
+modFitRF4 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell  + accel_forearm_x + accel_dumbbell_y + gyros_dumbbell_y + magnet_arm_z + magnet_forearm_z + accel_dumbbell_x + yaw_arm + magnet_dumbbell_x + accel_forearm_z + magnet_belt_y, data=subTrain1, trControl=trainControl(method="cv"), method="rf")
+modFitGBM4 <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell, data=subTrain1, method="gbm", trControl=train_control, verbose=FALSE)
 ```
 
-The accuracy of RF model increased to 99.12% for RF but decreased to 71.62% for GBM.
+The accuracy of RF model decreased slightly to 99.12% for RF but decreased to 71.62% for GBM.
 
-The initial, unmodified GBM and RF models yeild the promising results, with an accuracy of `r modFitRF1$results['Accuracy'][1,]` and 75.00% for the full set of variables.
+The initial, unmodified GBM and RF models yeild the promising results, with an accuracy of 98.76% and 75.00% for the full set of variables.
 
 To cross-validate this finding, we run each model generated on the reserved set of data, and calculate the accuracy.
 ```{r}
 #trainControl 
 
-#subTrain2$predicttrees <- predict(modFitTrees, newdata=subTrain2)
-#subTrain2$predictrf1 <- predict(modFitRF1, newdata=subTrain2)
+subTrain2$predicttrees <- predict(modFitTrees, newdata=subTrain2)
+subTrain2$predictrf1 <- predict(modFitRF1, newdata=subTrain2)
 subTrain2$predictrf2 <- predict(modFitRF2, newdata=subTrain2)
-#subTrain2$predictrf3 <- predict(modFitRF3, newdata=subTrain2)
-#subTrain2$predictrf4 <- predict(modFitRF4, newdata=subTrain2)
-#subTrain2$predictgbm1 <- predict(modFitGBM1, newdata=subTrain2)
-#subTrain2$predictgbm2 <- predict(modFitGBM2, newdata=subTrain2)
-#subTrain2$predictgbm3 <- predict(modFitGBM3, newdata=subTrain2)
-#subTrain2$predictgbm4 <- predict(modFitGBM4, newdata=subTrain2)
+subTrain2$predictrf3 <- predict(modFitRF3, newdata=subTrain2)
+subTrain2$predictrf4 <- predict(modFitRF4, newdata=subTrain2)
+subTrain2$predictgbm1 <- predict(modFitGBM1, newdata=subTrain2)
+subTrain2$predictgbm2 <- predict(modFitGBM2, newdata=subTrain2)
+subTrain2$predictgbm3 <- predict(modFitGBM3, newdata=subTrain2)
+subTrain2$predictgbm4 <- predict(modFitGBM4, newdata=subTrain2)
 
-#subTrain2$predictlda <- predict(modFitLDA, newdata=subTrain2)
-#subTrain2$predictnb <- predict(modFitNB, newdata=subTrain2)
+subTrain2$predictlda <- predict(modFitLDA, newdata=subTrain2)
+subTrain2$predictnb <- predict(modFitNB, newdata=subTrain2)
 
 
 ```
@@ -138,28 +143,28 @@ subTrain2$predictrf2 <- predict(modFitRF2, newdata=subTrain2)
 ## Predictions
 To test the accuracy of the model, we find the percentage of accurate predictions against the cross-validation set.  These are:
 ```{r}
-#accuracyTrees <- round(sum(subTrain2$predicttrees == subTrain2$classe)/length(subTrain2$classe) * 100,2)
+accuracyTrees <- round(sum(subTrain2$predicttrees == subTrain2$classe)/length(subTrain2$classe) * 100,2)
 accuracyrf1 <- round(sum(subTrain2$predictrf1 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
 accuracyrf2 <- round(sum(subTrain2$predictrf2 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
-#accuracyrf3 <- round(sum(subTrain2$predictrf3 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
-#accuracyrf4 <- round(sum(subTrain2$predictrf4 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
-#accuracygbm1 <- round(sum(subTrain2$predictgbm1 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
-#accuracygbm2 <- round(sum(subTrain2$predictgbm2 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
-#accuracygbm3 <- round(sum(subTrain2$predictgbm3 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
-#accuracygbm4 <- round(sum(subTrain2$predictgbm4 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
+accuracyrf3 <- round(sum(subTrain2$predictrf3 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
+accuracyrf4 <- round(sum(subTrain2$predictrf4 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
+accuracygbm1 <- round(sum(subTrain2$predictgbm1 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
+accuracygbm2 <- round(sum(subTrain2$predictgbm2 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
+accuracygbm3 <- round(sum(subTrain2$predictgbm3 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
+accuracygbm4 <- round(sum(subTrain2$predictgbm4 == subTrain2$classe)/length(subTrain2$classe) * 100,2)
 ```
-Accuracy RF1: `r accuracyrf1`%
-Accuracy RF2: `r accuracyrf2`%
-Accuracy RF3: 98.5%
-Accuracy RF4: 99.35%
-Accuracy GBM1: 96.52%
-Accuracy GBM2: 95.8%
-Accuracy GBM3: 93.39%
-Accuracy GBM4: 93.63%
+| Model | Accuracy |
+--------| --------- |
+ RF1: | 98.76%      |
+ RF2: | 99.42%      |
+ RF3: | 98.5%      |
+ RF4: | 99.35%      |
+ GBM1: | 96.52%      |
+ GBM2: | 95.8%      |
+ GBM3: |  93.39%      |
+ GBM4: | 93.63%      |
 
 Accuracy calcuations are consistent with the accuracy reported by 'train', meaning that the un-restricted RF1 and GBM1 are the most accurate models tested. We'd expect a `r 100-accuracyrf2`% error rate for the RF2 model, and a 3.58% error rate for the GBM1 model.
-
-
 
 Confusion matrices for the relevant models show the strengths of each:
 
@@ -171,23 +176,30 @@ confusionMatrix(subTrain2$predictrf2, subTrain2$classe)
 ### Combining models
 As a final attempt to increase the accuracy of the model, we try combining the predictions from the successful RF2 and GBM1 models and retrain it using 'gam' method. 
 ```{r}
-#newmodel <- train(classe ~ predictrf2 + predictgbm1 , method="gam", data=subTrain2)
-#subTrain2$predictcombined <- predict(newmodel, newdata=subTrain2)
-#accuracycombined <- round(sum(subTrain2$predictcombined == subTrain2$classe)/length(subTrain2$classe) * 100,2)
-#confusionMatrix(subTrain2$predictcombined, subTrain2$classe) -> newmodelout
+newmodel <- train(classe ~ predictrf2 + predictgbm1 , method="gam", data=subTrain2)
+subTrain2$predictcombined <- predict(newmodel, newdata=subTrain2)
+accuracycombined <- round(sum(subTrain2$predictcombined == subTrain2$classe)/length(subTrain2$classe) * 100,2)
+confusionMatrix(subTrain2$predictcombined, subTrain2$classe) -> newmodelout
 #only produces accuracy of 46.4
 ```
 
-The resultant model is only accurate to 0.4766. (`r #newmodelout$overall['Accuracy']`), experimentally verified through prediction on the cross-validation set to 47.66% (`r #accuracycombined`).
+The resultant model is only accurate to 47.66%. (`r newmodelout$overall['Accuracy']`), experimentally verified through prediction on the cross-validation set to 47.66% (`r accuracycombined`).
 
 ## Conclusion
 
 Thus, the best model on this initial training set is simple random forest model, with a restricted variables included. The predictions versus actual of the cross-validated set are displayed below:
 
 ```{r}
-#finalMod <- train(classe ~  roll_belt + pitch_forearm + yaw_belt + magnet_dumbbell_y + magnet_dumbbell_z + roll_forearm + magnet_belt_z + gyros_belt_z + pitch_belt + roll_dumbbell  + accel_forearm_x + accel_dumbbell_y + gyros_dumbbell_y + magnet_arm_z + magnet_forearm_z + accel_dumbbell_x + yaw_arm + magnet_dumbbell_x + accel_forearm_z + magnet_belt_y, method="rf", data=newtrainingset)
+
 qplot(subTrain2$classe, subTrain2$predictrf2) + geom_jitter() + xlab("Original") + ylab("Prediction")
 ```
+## Final Predictions
+```{r}
+testing$predictions <- predict(modFitRF2, testing)
+
+testing$predictions
+```
+
 
 ## Citations
 Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
